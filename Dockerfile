@@ -20,6 +20,9 @@ RUN cat /install/install_oe.log
 # without ESAM complaining about the missing progress.cfg
 RUN rm -f /usr/dlc/progress.cfg
 
+COPY clean-dlc.sh /install/openedge/
+RUN /install/openedge/clean-dlc.sh
+
 # multi stage build, this give the possibilty to remove all the slack from stage 0
 FROM ubuntu:22.04 AS instance
 

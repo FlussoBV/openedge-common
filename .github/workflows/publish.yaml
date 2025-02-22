@@ -1,0 +1,65 @@
+name: Publish image
+
+on:
+  workflow_dispatch:
+    inputs:
+      openedgeversion:
+        type: string
+        description: "enter OpenEdge version (x.y.z, f.e. 12.8.0)"
+        default: "12.8.6"
+        required: true
+      versionpostfix:
+        type: string
+        description: "enter postfix for the image tag (f.e. -rc1)"
+        default: ""
+        required: false
+      targetregistry:
+        type: choice
+        description: Choose target image registry
+        default: "dockerhub-devbfvio"
+        required: true
+        options:
+          - dockerhub-devbfvio
+  
+jobs:
+  publish:
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ github.event.inputs.targetregistry }}
+  
+    steps:
+    
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Setup OpenEdge
+        uses: ./.github/actions/setup-openedge
+        with:
+          version: ${{ inputs.openedgeversion }}
+
+      - name: Get response.ini
+        shell: bash
+        run: |
+          echo "${{ secrets[format('RESPONSE_INI_{0}', env.FLATVERSION)] }}" > response.ini
+          echo "${{ secrets[format('PROGRESS_CFG_{0}', env.FLATVERSION)] }}" | base64 --decode > progress.cfg
+      
+      - name: Build image name
+        run: |
+          echo "IMAGE_NAME=${{ vars.REGISTRY_DOMAIN }}/${{ vars.IMAGE_PREFIX }}openedge-common:${{ env.OPENEDGE_VERSION }}${{ inputs.versionpostfix }}" >> $GITHUB_ENV
+
+      - name: Build docker image
+        run: |
+          docker build -f Dockerfile -t ${{ env.IMAGE_NAME }} .
+
+      - name: Login to registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
+        with:
+          registry: ${{ vars.REGISTRY_DOMAIN }}
+          username: ${{ vars.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      
+      - name: Push image to registry
+        run: |
+          docker push ${{env.IMAGE_NAME}}

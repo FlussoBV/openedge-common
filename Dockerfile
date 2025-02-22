@@ -16,8 +16,10 @@ ENV TERM=xterm
 RUN /install/install-openedge.sh
 RUN cat /install/install_oe.log
 
-RUN ls -l /usr/
-RUN ls -l /usr/wrk/
+# with an empty progress.cfg, one can still create PAS instances
+# without ESAM complaining about the missing progress.cfg
+RUN rm -f /usr/dlc/progress.cfg && \
+    touch /usr/dlc/progress.cfg
 
 # multi stage build, this give the possibilty to remove all the slack from stage 0
 FROM ubuntu:22.04 AS instance
@@ -64,3 +66,5 @@ RUN \
 RUN chown -R openedge:openedge /app/ 
 
 USER openedge
+
+WORKDIR /usr/dlc

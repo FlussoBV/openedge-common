@@ -20,14 +20,16 @@ on:
         required: true
         options:
           - dockerhub-devbfvio
-  
+
+run-name: publish openedge-common:${{ inputs.openedgeversion }}${{ inputs.versionpostfix }} to ${{ inputs.targetregistry }}  
+
 jobs:
   publish:
 
     runs-on: ubuntu-latest
 
     environment:
-      name: ${{ github.event.inputs.targetregistry }}
+      name: ${{ inputs.targetregistry }}
   
     steps:
     

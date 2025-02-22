@@ -18,8 +18,7 @@ RUN cat /install/install_oe.log
 
 # with an empty progress.cfg, one can still create PAS instances
 # without ESAM complaining about the missing progress.cfg
-RUN rm -f /usr/dlc/progress.cfg && \
-    touch /usr/dlc/progress.cfg
+RUN rm -f /usr/dlc/progress.cfg
 
 # multi stage build, this give the possibilty to remove all the slack from stage 0
 FROM ubuntu:22.04 AS instance
@@ -57,6 +56,9 @@ RUN groupadd -g 1000 openedge && \
 # kubernetes does not support volume mount of single files
 RUN chown root:openedge $DLC
 RUN chmod 775 $DLC
+
+RUN touch /usr/dlc/progress.cfg  && \
+    chown openedge:openedge /usr/dlc/progress.cfg
 
 # create directories and files as root
 RUN \
